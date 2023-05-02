@@ -145,17 +145,15 @@ resource "digitalocean_droplet" "web" {
 }
 
 resource "digitalocean_loadbalancer" "default" {
-  name                     = "dhanush.arch"
+  name                     = "sfo3-load-balancer-01"
   region                   = var.region
   size                     = "lb-small"
-  # redirect_http_to_https   = true
-  enable_backend_keepalive = false
+  enable_backend_keepalive = true
 
   vpc_uuid    = resource.digitalocean_vpc.default.id
   droplet_ids = [digitalocean_droplet.web.id]
 
   forwarding_rule {
-    # certificate_name = digitalocean_certificate.default.name
     entry_port       = 80
     entry_protocol   = "http"
     target_port      = 80
@@ -164,13 +162,9 @@ resource "digitalocean_loadbalancer" "default" {
   
 
   healthcheck {
-    port     = 22
-    protocol = "tcp"
-    # path     = "/health"
-    # check_interval_seconds   = 30
-    # response_timeout_seconds = 5
-    # unhealthy_threshold      = 2
-    # healthy_threshold        = 2
+    port     = 80
+    protocol = "http"
+    path     = "/"
   }
 }
 
