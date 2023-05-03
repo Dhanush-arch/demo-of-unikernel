@@ -2,7 +2,8 @@
 .DS_Store
 .terraform*
 terraform.tfstate*
-/node_modules
+web/node_modules
 /out
-/kerla
+/unikernel
 /build
+/image

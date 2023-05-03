@@ -1,4 +1,4 @@
-node_modules
+web/node_modules
 http-server/build
 out
 .git

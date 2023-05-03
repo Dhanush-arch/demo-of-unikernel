@@ -11,52 +11,32 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 
 PROGRESS := printf "  \\033[1;96m%10s\\033[0m  \\033[1;m%s\\033[0m\\n"
 
-ifeq ($(shell uname),Darwin)
-DO_TOKEN ?= $(shell yq e .access-token ~/Library/Application\ Support/doctl/config.yaml)
-endif
-
-KERLA_TAG ?= main
-
-TERRAFORM_FLAGS += -var "do_token=$(DO_TOKEN)"
-TERRAFORM_FLAGS += -var "grafana_cloud_username=$(GRAFANA_CLOUD_USERNAME)"
-TERRAFORM_FLAGS += -var "grafana_cloud_password=$(GRAFANA_CLOUD_PASSWORD)"
+GIT_TAG ?= digital-ocean-support
 
 os:
-	$(MAKE) seiya-me
-	$(MAKE) kerla
-	$(MAKE) -C build/kerla IMAGE=seiya-me RELEASE=1
+	$(MAKE) app
+	$(MAKE) unikernel
+	$(MAKE) -C build/unikernel IMAGE=deploy-app RELEASE=1
+	mkdir -p image
+	cp build/unikernel/unikernel.x64.elf image/unikernel.elf
 
-kerla:
-	$(PROGRESS) BUILD $@
-	mkdir build
-	git clone https://github.com/nuta/kerla build/kerla
-	cd build/kerla && git checkout $(KERLA_TAG)
+build:
+	$(PROGRESS) Building unikernel
+	$(MAKE) -C build/unikernel IMAGE=deploy-app RELEASE=1
 
-seiya-me:
-	$(PROGRESS) BUILD $@
-	docker buildx build -t seiya-me .
+run:
+	$(PROGRESS) Running App 
+	$(MAKE) -C build/unikernel IMAGE=deploy-app RELEASE=1 run
 
-.PHONY: tf-plan
-tf-plan:
-	$(PROGRESS) TERRAFORM PLAN
-	cd infra && terraform plan $(TERRAFORM_FLAGS)
+unikernel:
+	$(PROGRESS) Downloading $@
+	mkdir -p build
+	git clone https://github.com/Dhanush-arch/uni-kernel build/unikernel
+	cd build/unikernel && git checkout $(GIT_TAG)
 
-.PHONY: tf-apply
-tf-apply:
-	if [ "$$DO_TOKEN" = "" ]; then \
-		echo DO_TOKEN is not set; \
-		exit 1; \
-	fi
-	if [ "$$GRAFANA_CLOUD_USERNAME" = "" ]; then \
-		echo GRAFANA_CLOUD_USERNAME is not set; \
-		exit 1; \
-	fi
-	if [ "$$GRAFANA_CLOUD_PASSWORD" = "" ]; then \
-		echo GRAFANA_CLOUD_PASSWORD is not set; \
-		exit 1; \
-	fi
-	$(PROGRESS) TERRAFORM APPLY
-	cd infra && terraform apply $(TERRAFORM_FLAGS)
+app:
+	$(PROGRESS) Building Deploy-app
+	docker buildx build -t deploy-app .
 
 .PHONY: optimize-images
 optimize-images:
