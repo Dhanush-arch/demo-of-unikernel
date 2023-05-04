@@ -20,9 +20,12 @@ os:
 	mkdir -p image
 	cp build/unikernel/unikernel.x64.elf image/unikernel.elf
 
-build:
-	$(PROGRESS) Building unikernel
+re-build:
+	$(MAKE) app
+	rm -rf build/unikernel/build
+	rm build/unikernel/unikernel.*
 	$(MAKE) -C build/unikernel IMAGE=deploy-app RELEASE=1
+	cp build/unikernel/unikernel.x64.elf image/unikernel.elf
 
 run:
 	$(PROGRESS) Running App 

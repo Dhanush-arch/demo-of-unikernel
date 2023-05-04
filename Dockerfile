@@ -25,13 +25,13 @@ RUN make RELEASE=1 CC=musl-gcc
 #
 #  www
 #
-FROM node:17-alpine as www
-ADD web/package.json /repo/package.json 
-ADD web/yarn.lock /repo/yarn.lock
-ADD web/ /repo
-WORKDIR /repo
-RUN yarn
-RUN yarn build
+# FROM node:17-alpine as www
+# ADD web/package.json /repo/package.json 
+# ADD web/yarn.lock /repo/yarn.lock
+# ADD web/ /repo
+# WORKDIR /repo
+# RUN yarn
+# RUN yarn build
 
 #
 #  Initramfs
@@ -43,5 +43,5 @@ RUN ["/bin/busybox", "--install", "-s"]
 RUN mkdir -p /dev /tmp /www
 RUN ln -s /proc/metrics /www/metrics
 COPY --from=http-server /http-server/build/http-server /bin/http-server
-COPY --from=www /repo/out /www
+ADD web/ /www
 CMD ["/bin/http-server", "-p", "80", "-b", "any", "-c", "64", "-d", "/www"]
